@@ -1,8 +1,8 @@
 rm(list = ls())
 library(limma)
 library(biomaRt)
-load("TCGAnewjk.rData")
-genes <- colnames(combyordered)[-1:-2]
+mut.matrix <- read.table("../data/binary-mutation-matrix.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+genes <- colnames(mut.matrix)
 # Downloaded from https://string-db.org/ (Homo sapiens only)
 network <- read.table("9606.protein.links.v10.5.txt", sep = " ", header = TRUE, stringsAsFactors = FALSE)
 network[,1:2] <- data.frame(cbind(substring(network$protein1, 6), substring(network$protein2, 6)), stringsAsFactors=FALSE)
@@ -13,9 +13,9 @@ ensbl.network <- unique(c(network[,1],network[,2]))
 mart <- useMart(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
 results <- getBM(attributes = c("ensembl_gene_id", "ensembl_transcript_id", "ensembl_peptide_id","hgnc_symbol"),
                  filters = "ensembl_peptide_id", values = ensbl.network, mart = mart)
-save.image("data-load.rdata")
+
 ####################
-# 
+# Only keep edges with genes in mutation matrix
 network.genes <- data.frame(cbind(results$hgnc_symbol[match(network$protein1, results$ensembl_peptide_id)], 
                                   results$hgnc_symbol[match(network$protein2, results$ensembl_peptide_id)]), stringsAsFactors = FALSE)
 network.genes.clean <- network.genes[!is.na(network.genes[,1]) & !is.na(network.genes[,2]),]
@@ -30,10 +30,13 @@ network.clean.adj <- data.frame(matrix(data = 0, nrow = length(symbols), ncol = 
 invisible(apply(network.clean, 1, function(tuple) { network.clean.adj[tuple[1], gsub("-","\\.",tuple[2])] <<- 1 })) # colname changes - to .
 
 ####################
-# Load cancer network
-load("../manuscript-code/cpcentresallmat.RData")
+# Create adjacency matrix from 
 id.missing.gene <- which(is.na(alias2SymbolTable(genes)))
-cancer.adj <- lapply(cpcentresallmat, function(mat,id) { return(mat[-id,-id]) }, id.missing.gene)
+types <- c("blca","brca","cesc","coadread","esca","gbm","hnsc","kirc","kirp","laml","lgg","lihc","luad","lusc","ov","paad","pcpg","prad","sarc","stad","thca","ucec")
+cancer.adj <- lapply(types, function(type,id) { 
+    mat <- read.table(paste("../data/networks/", type, "-network.txt", sep = ""), sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+    return(mat[-id,-id]) 
+    }, id.missing.gene)
 
 ###################
 # Use sum of all cancers

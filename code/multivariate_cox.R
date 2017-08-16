@@ -4,34 +4,21 @@ rm(list=ls())
 library(survival)
 library(RColorBrewer)
 
-output <- read.table("tcga-clinical-information.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-withEdges <- FALSE # Bernoulli vs. Graphical
-alpha <- 0.5 # Alpha 0 or 0.5
-
-# Load cluster assignment
-if (withEdges) {
-    load(file = "clusteringEMk22alpha0.5best.RData")
-    newclustermembershipbest <- newclustermembership
-} else if (alpha == 0.5){
-    load('clusteringEMemptymutk22alpha0.5tau340.RData')
-} else if (alpha == 0) {
-    load('clusteringEMemptymutk22alpha0.001tau340.RData')
-} 
-
-load('../../TCGAnewjk.rData') # Load cancer types
+output <- read.table("../data/tcga-clinical-information.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+cluster.membership <- read.table("../data/annotation-matrix.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+newclustermembership <- cluster.membership$cluster
 
 # Map clinical data to clustering
-groupId <- match(output$id, combyordered$id)
-clinical <- cbind(output, newclustermembershipbest[groupId], combyordered$type[groupId])
+groupId <- match(output$id, rownames(cluster.membership))
+clinical <- cbind(output, cluster.membership$cluster[groupId], cluster.membership$type[groupId])
 colnames(clinical) <- c(colnames(output), 'group', 'tissue')
 # Change group from 1:22 to A:V
 clinical$group <- as.factor(clinical$group)
-levels(clinical$group) <- LETTERS[1:length(unique(newclustermembershipbest))]
+levels(clinical$group) <- LETTERS[1:length(unique(cluster.membership$cluster))]
 clinical <- subset(clinical, !is.na(clinical$group))
 table(clinical$group)
 clinical[,c('age','event','time')] <- lapply(clinical[,c('age','event','time')], as.numeric)
 # Remove subtype from tissue
-#levels(clinical$tissue) <- sapply(levels(clinical$tissue), function(tissue) {strsplit(tissue, " ")[[1]][1]})
 clinical[,c('stage','t','n','m','group','tissue')] <- lapply(clinical[,c('stage','t','n','m','group','tissue')], factor)
 
 ##########################################
@@ -50,13 +37,7 @@ groupTest <- summary(coxph(Surv(time, as.numeric(event)) ~ stage + age + tissue 
 mat <- matrix(c(stageTest, ageTest-stageTest, tissueTest-ageTest, groupTest-tissueTest), nrow = 4)
 mat <- mat/2 # Log-rank statistic is twice the chisquare statistic
 col <- rev(brewer.pal(4, "Greys"))
-if (withEdges) {
-    pdf('cluster_improved_survival_prediction_k_22_alpha_0.5.pdf', width=5, height = 10)
-} else if (alpha == 0){
-    pdf('cluster_improved_survival_prediction_k_22_alpha_0.001_empty', width=5, height = 10)
-} else if (alpha == 0.5) {
-    pdf('cluster_improved_survival_prediction_k_22_alpha_0.5_empty', width=5, height = 10)
-} 
+pdf('cluster_improved_survival_prediction_k_22_alpha_0.5.pdf', width=5, height = 10)
 barplot(mat,col = col, ylim=c(0,ceiling(sum(mat)/100)*100), ylab='Change in LR statistic')
 # P-value chisquare distribution
 LR <- round((groupTest-tissueTest)/2, 1)

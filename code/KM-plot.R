@@ -3,18 +3,14 @@ rm(list=ls())
 library(survival)
 library(RColorBrewer)
 library(gplots)
-setwd("~/polybox/Jack/pancancer-clustering/code/")
 output <- read.table("../data/tcga-clinical-information.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 
 # Load classification by mutation profile (cluster assignment)
-load(file="clusteringEMk22alpha0.5best.RData")
-
-# Load original binary mutation matrix (cancer types)
-load('TCGAnewjk.rData')
+cluster.membership <- read.table("../data/annotation-matrix.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 
 # Map clinical data to clustering
-groupId <- match(output$id, sapply(combyordered$id, as.character))
-clinical <- cbind(output, newclustermembership[groupId], combyordered$type[groupId])
+groupId <- match(output$id, rownames(mut.matrix))
+clinical <- cbind(output, cluster.membership$cluster[groupId], cluster.membership$type[groupId])
 colnames(clinical) <- c(colnames(output),'group','type')
 table(clinical$group)
 clinical$group <- factor(as.numeric(clinical$group))
