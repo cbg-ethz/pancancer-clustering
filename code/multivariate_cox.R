@@ -6,7 +6,6 @@ library(RColorBrewer)
 
 output <- read.table("../data/tcga-clinical-information.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 cluster.membership <- read.table("../data/annotation-matrix.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
-newclustermembership <- cluster.membership$cluster
 
 # Map clinical data to clustering
 groupId <- match(output$id, rownames(cluster.membership))
