@@ -9,7 +9,7 @@ output <- read.table("../data/tcga-clinical-information.txt", sep = "\t", header
 cluster.membership <- read.table("../data/annotation-matrix.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 
 # Map clinical data to clustering
-groupId <- match(output$id, rownames(mut.matrix))
+groupId <- match(output$id, rownames(cluster.membership))
 clinical <- cbind(output, cluster.membership$cluster[groupId], cluster.membership$type[groupId])
 colnames(clinical) <- c(colnames(output),'group','type')
 table(clinical$group)
@@ -23,13 +23,14 @@ levels(clinical$type) <- sapply(levels(clinical$type), function(tissue) {strspli
 
 # Kaplan-Meier curve for 22 groups
 # Colors A -- V
-colourysdots<-rev(c("#202020","#771122","#AA4455","#DD7788","#774411","#AA7744",
+colourysdots<-c("#202020","#771122","#AA4455","#DD7788","#774411","#AA7744",
                     "#DDAA77","#777711","#AAAA44","#DDDD77","#117744","#44AA77",
                     "#88CCAA","#117777","#44AAAA","#77CCCC","#114477","#4477AA",
-                    "#77AADD","#771155","#AA4488","#CC99BB"))
+                    "#77AADD","#771155","#AA4488","#CC99BB")
 pdf('../overall-survival-cluster-types-22.pdf', width=10, height=10)
-    plot(survfit(Surv(time = as.numeric(time)/365, event = as.numeric(event)) ~ group, data = clinical), col=colourysdots, ylab='Survival probability', xlab='Survival (years)', cex.lab=1.5, cex.axis=1.5, mark.time = T)
-    legend(x = 20, y = 1.02, legend = paste(levels(clinical$group), sep=' '), pch = 15, col=colourysdots, cex=1.5, ncol = 3,title="Cluster", bg='gray90')
+par(mar = c(4.5,4.5,0.5,0.5))
+    plot(survfit(Surv(time = as.numeric(time)/365, event = as.numeric(event)) ~ group, data = clinical), col=colourysdots, ylab='Survival probability', xlab='Survival (years)', cex.lab=1.5, cex.axis=1.5, mark.time = T,xlim=c(0,25))
+    legend(x = 21, y = 1.02, legend = paste(levels(clinical$group), sep=' '), pch = 15, col=colourysdots, cex=1.8, ncol = 2,title="Cluster", bg='gray90')
 dev.off()
 
 ###################################################################
