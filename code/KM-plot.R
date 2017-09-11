@@ -29,8 +29,8 @@ colourysdots<-c("#202020","#771122","#AA4455","#DD7788","#774411","#AA7744",
                     "#77AADD","#771155","#AA4488","#CC99BB")
 pdf('../overall-survival-cluster-types-22.pdf', width=10, height=10)
 par(mar = c(4.5,4.5,0.5,0.5))
-    plot(survfit(Surv(time = as.numeric(time)/365, event = as.numeric(event)) ~ group, data = clinical), col=colourysdots, ylab='Survival probability', xlab='Survival (years)', cex.lab=1.5, cex.axis=1.5, mark.time = T,xlim=c(0,25))
-    legend(x = 21, y = 1.02, legend = paste(levels(clinical$group), sep=' '), pch = 15, col=colourysdots, cex=1.8, ncol = 2,title="Cluster", bg='gray90')
+    plot(survfit(Surv(time = as.numeric(time)/365, event = as.numeric(event)) ~ group, data = clinical), col=colourysdots, ylab='Survival probability', xlab='Survival (years)', cex.lab=1.5, cex.axis=1.5, mark.time = T)
+    legend(x = 21.5, y = 1.01, legend = paste(levels(clinical$group), sep=' '), pch = 15, col=colourysdots, cex=1.75, ncol = 2,title="Cluster", bg='gray90')
 dev.off()
 
 ###################################################################
